@@ -67,20 +67,17 @@
 </template>
 
 <script setup lang="ts">
+import { useColumnLinker } from '~/composables/use-column-linker'
+
+const { standardColunms } = useColumnLinker()
+
 interface Node {
   id: number
   label: string
   connected?: number
 }
 
-const nodes1 = ref<Node[]>([
-  { id: 1, label: '컬럼1' },
-  { id: 2, label: '컬럼2' },
-  { id: 3, label: '컬럼3' },
-  { id: 4, label: '컬럼4' },
-  { id: 5, label: '컬럼5' },
-  { id: 6, label: '컬럼6' },
-])
+const nodes1 = ref<Node[]>([])
 
 
 const nodes2 = ref<Node[]>([
@@ -185,6 +182,13 @@ function showConnectedStatus (): string[] {
 
   return result
 }
+
+watch(
+  () => standardColunms.value,
+  (newValue: Node[]) => {
+    nodes1.value = newValue
+  }
+)
 </script>
 
 <style lang="scss" scoped>

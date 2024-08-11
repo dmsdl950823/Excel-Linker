@@ -4,6 +4,7 @@
     directory-dnd
     :max="props.max"
     accept=".xls,.xlsx,.xlsm,.csv,.xlsb"
+    @update:file-list="handleUploadEvent"
   >
     <NUploadDragger>
       <div style="margin-bottom: 12px">
@@ -28,11 +29,21 @@ interface UploadComponentProps {
   max?: number
 }
 
+interface UploadComponentEmits {
+  (e: 'upload', files: File[]): void
+}
+
 const props = withDefaults(defineProps<UploadComponentProps>(), {
   placeholder: "파일을 올려주세요.",
   description: "설명을 입력해주세요",
   max: 1
 })
+
+const emits = defineEmits<UploadComponentEmits>()
+
+function handleUploadEvent (e: File[]) {
+  emits('upload', e)
+}
 </script>
 
 <style lang="scss" scoped>
