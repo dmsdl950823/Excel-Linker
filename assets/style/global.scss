@@ -1,0 +1,40 @@
+@font-face {
+  font-family: '양진체';
+  src: url('https://fastly.jsdelivr.net/gh/supernovice-lab/font@0.9/yangjin.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'PTBandocheB';
+  src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/2408@1.0/PTBandocheB.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+
+body {
+  color: #333;
+  font-family: 'PTBandocheB';
+}
+
+
+h1 {
+  color: #161616;
+  font-family: '양진체';
+  font-size: 4vw;
+  line-height: 4vw;
+  margin-bottom: 40px;
+}
+
+
+h2 {
+  color: #333;
+  font-family: '양진체';
+  font-size: 3vw;
+  line-height: 4vw;
+  margin-bottom: 40px;
+}
+
+.button-area {
+  margin-top: 25px;
+}
