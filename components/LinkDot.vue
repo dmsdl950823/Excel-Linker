@@ -69,7 +69,7 @@
 <script setup lang="ts">
 import { useColumnLinker } from '~/composables/use-column-linker'
 
-const { standardColunms } = useColumnLinker()
+const { standardColunms, restColunms } = useColumnLinker()
 
 interface Node {
   id: number
@@ -78,16 +78,7 @@ interface Node {
 }
 
 const nodes1 = ref<Node[]>([])
-
-
-const nodes2 = ref<Node[]>([
-  { id: 7, label: '컬럼7' },
-  { id: 8, label: '컬럼8' },
-  { id: 9, label: '컬럼9' },
-  { id: 10, label: '컬럼10' },
-  { id: 11, label: '컬럼11' },
-  { id: 12, label: '컬럼12' },
-])
+const nodes2 = ref<Node[]>([])
 
 const activeNodes = ref<Node[]>([])
 const nodeRefs = ref<{ [key: string]: VNode | null }>({});
@@ -176,7 +167,7 @@ function showConnectedStatus (): string[] {
   const result: string[] = []
   for (const node of nodes1.value) {
     if (node.connected) {
-      result.push(`${node.label} → ${node.connected}`)
+      result.push(`${node.label} → ${nodes2.value[node.connected].label}`)
     }
   }
 
@@ -187,6 +178,13 @@ watch(
   () => standardColunms.value,
   (newValue: Node[]) => {
     nodes1.value = newValue
+  }
+)
+
+watch(
+  () => restColunms.value,
+  (newValue: Node[]) => {
+    nodes2.value = newValue
   }
 )
 </script>

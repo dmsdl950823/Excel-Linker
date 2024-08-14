@@ -39,12 +39,12 @@
 import * as XLSX from 'xlsx';
 import UploadComponent from '~/components/UploadComponent.vue';
 
-import { useColumnLinker } from "~/composables/use-column-linker"
+import { type Node, useColumnLinker } from "~/composables/use-column-linker"
 
 const { standardColunms, restColunms } = useColumnLinker()
 
 const standardFile = ref<File | null>(null)
-const resFileList = ref<File[]>([])
+const restFileList = ref<File[]>([])
 const dataArray = ref<any[]>([]); // 데이터를 저장할 배열
 
 function handleUploadStandardFileList (fileList: File[]) {
@@ -52,42 +52,50 @@ function handleUploadStandardFileList (fileList: File[]) {
   else standardFile.value = null
 }
 function handleUploadFileList (fileList: File[]) {
-  resFileList.value = fileList
+  restFileList.value = fileList
 }
 
-function handleTransButtonClickEvent () {
+async function handleTransButtonClickEvent () {
   if (!standardFile.value) return
 
   const file = standardFile.value.file
+  const restFiles = restFileList.value
+  // console.log(file, restFiles[0])
 
-  const result = readFileToArray(file)
-  console.log(result, '?ㅇ')
+  const standardColumnsList = await readFileToArray(file)
+  const restColumnsList = await readFileToArray(restFiles[0].file) // TODO: 0번째 파일만
+
+  // console.log(standardColumnsList, restColumnsList)
+  standardColunms.value = standardColumnsList
+  restColunms.value = restColumnsList
 }
 
-function readFileToArray (file: File) {
-  const reader = new FileReader();
-  reader.readAsArrayBuffer(file);
-  let result = null
+function readFileToArray (file: File): Promise<Node[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsArrayBuffer(file);
+    
+    reader.onload = async (e: ProgressEvent<FileReader>) => {
+      if (e.target?.result) {
+        // Parse the file using XLSX
+        const data = new Uint8Array(e.target.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
 
-  reader.onload = async (e: ProgressEvent<FileReader>) => {
-    if (e.target?.result) {
-      // Parse the file using XLSX
-      const data = new Uint8Array(e.target.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: 'array' });
+        // Assuming you want to process the first sheet
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData: Array<string[]> = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converts sheet to array of arrays
 
-      // Assuming you want to process the first sheet
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData: Array<string[]> = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converts sheet to array of arrays
-
-      console.log('Parsed Data:', jsonData);
-      standardColunms.value = jsonData[0].map((item, id) => ({ label: item, id }))
-      // You can now use jsonData array for further processing
-      
-      result = jsonData[0].map((item, id) => ({ label: item, id }))
+        // console.log('Parsed Data:', jsonData[0]);
+        const result = jsonData[0].map((item, id) => ({ label: item, id }))
+        
+        resolve(result) 
+      }
     }
-  };
 
-  return result
+    reader.onerror = (e) => {
+      reject(e)
+    }
+  })
 }
 </script>
 
