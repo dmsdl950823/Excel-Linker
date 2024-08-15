@@ -1,6 +1,6 @@
 <template>
   <div class="saved-template">
-      <h1>저장된 템플릿</h1>
+    <h1>저장된 템플릿</h1>
   </div>
 </template>
 

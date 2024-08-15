@@ -4,14 +4,14 @@
     
     <NGrid x-gap="20" :cols="2">
       <NGi>
-        <UploadComponent
+        <ExcelUpload
           placeholder="컬럼 기준이 될 엑셀 파일을 올려주세요. (1개)"
           description=".xls,.xlsx,.xlsm,.csv,.xlsb 파일만 업로드 할 수 있습니다."
           @upload="handleUploadStandardFileList"
         />
       </NGi>
       <NGi>
-        <UploadComponent
+        <ExcelUpload
           placeholder="엑셀 파일을 올려주세요. (5개)"
           description=".xls,.xlsx,.xlsm,.csv,.xlsb 파일만 업로드 할 수 있습니다."
           @upload="handleUploadFileList"
@@ -36,34 +36,44 @@
 </template>
 
 <script setup lang="ts">
-import * as XLSX from 'xlsx';
-import UploadComponent from '~/components/UploadComponent.vue';
+import * as XLSX from "xlsx"
+import { useMessage, type UploadFileInfo } from "naive-ui"
 
-import { type Node, useColumnLinker } from "~/composables/use-column-linker"
+import type { Node } from "@/components/link-columns/link-columns.type"
 
+import { useColumnLinker } from "~/composables/use-column-linker"
+
+const message = useMessage()
 const { standardColunms, restColunms } = useColumnLinker()
 
-const standardFile = ref<File | null>(null)
-const restFileList = ref<File[]>([])
+const standardFile = ref<UploadFileInfo | null>(null)
+const restFileList = ref<UploadFileInfo[]>([])
 const dataArray = ref<any[]>([]); // 데이터를 저장할 배열
 
-function handleUploadStandardFileList (fileList: File[]) {
+function handleUploadStandardFileList (fileList: UploadFileInfo[]) {
   if (fileList.length === 1) standardFile.value = fileList[0]
   else standardFile.value = null
 }
-function handleUploadFileList (fileList: File[]) {
+function handleUploadFileList (fileList: UploadFileInfo[]) {
   restFileList.value = fileList
 }
 
 async function handleTransButtonClickEvent () {
-  if (!standardFile.value) return
+  if (!standardFile.value) {
+    message.error('기준 컬럼을 등록해주세요.')
+    return
+  }
+  if (restFileList.value.length === 0) {
+    message.error('엑셀파일을 등록해주세요.')
+    return
+  }
 
-  const file = standardFile.value.file
-  const restFiles = restFileList.value
-  // console.log(file, restFiles[0])
+  const standard = (standardFile.value.file) as File
+  const rest = (restFileList.value[0].file) as File
 
-  const standardColumnsList = await readFileToArray(file)
-  const restColumnsList = await readFileToArray(restFiles[0].file) // TODO: 0번째 파일만
+  // console.log(file)
+  const standardColumnsList = await readFileToArray(standard)
+  const restColumnsList = await readFileToArray(rest) // TODO: 0번째 파일만
 
   // console.log(standardColumnsList, restColumnsList)
   standardColunms.value = standardColumnsList

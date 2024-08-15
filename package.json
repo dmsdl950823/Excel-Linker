@@ -16,10 +16,15 @@
     "nuxt": "^3.12.4",
     "nuxtjs-naive-ui": "^1.0.2",
     "vue": "latest",
+    "vue-tsc": "^2.0.29",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@nuxt/eslint": "^0.5.0",
+    "@stylistic/eslint-plugin": "^2.6.2",
+    "@stylistic/eslint-plugin-ts": "^2.6.2",
+    "@types/xlsx": "^0.0.36",
+    "@typescript-eslint/eslint-plugin": "^8.1.0",
+    "@typescript-eslint/parser": "^8.1.0",
     "eslint": "^9.9.0",
     "eslint-plugin-nuxt": "^4.0.0",
     "naive-ui": "^2.39.0",

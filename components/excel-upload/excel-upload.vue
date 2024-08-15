@@ -23,15 +23,8 @@
 </template>
 
 <script setup lang="ts">
-interface UploadComponentProps {
-  placeholder?: string
-  description?: string
-  max?: number
-}
-
-interface UploadComponentEmits {
-  (e: 'upload', files: File[]): void
-}
+import type { UploadFileInfo } from "naive-ui"
+import type { UploadComponentProps, UploadComponentEmits } from "./excel-upload.type"
 
 const props = withDefaults(defineProps<UploadComponentProps>(), {
   placeholder: "파일을 올려주세요.",
@@ -41,7 +34,7 @@ const props = withDefaults(defineProps<UploadComponentProps>(), {
 
 const emits = defineEmits<UploadComponentEmits>()
 
-function handleUploadEvent (e: File[]) {
+function handleUploadEvent (e: UploadFileInfo[]) {
   emits('upload', e)
 }
 </script>

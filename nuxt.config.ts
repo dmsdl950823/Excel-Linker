@@ -5,10 +5,14 @@ import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
+  typescript: {
+    typeCheck: true,
+    // strict: false
+  },
   devtools: { enabled: true },
   modules: [
     "nuxtjs-naive-ui",
-    "@nuxt/eslint"
+    // "@nuxt/eslint"
   ],
   css: [
     '@/assets/style/global.scss'

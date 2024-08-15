@@ -14,7 +14,8 @@
 
     <NSpace justify="space-between" :size="100" class="column-area">
       <NSpace justify="center" align="center" vertical>
-        <NButton
+      {{ nodes1 }}
+        <!-- <NButton
           v-for="node in nodes1"
           :key="node.id"
           tertiary
@@ -26,8 +27,8 @@
           @click="handleNodeClickEvent(node)"
         >
           {{ node.label }}
-          <!-- -> {{ node.connected }} -->
-        </NButton>
+          -> {{ node.connected }}
+        </NButton> -->
       </NSpace>
 
       <!-- <NSpace>
@@ -37,7 +38,7 @@
       </NSpace> -->
 
       <NSpace justify="center" align="center" vertical>
-        <NButton
+        <!-- <NButton
           v-for="node in nodes2"
           :key="node.id"
           tertiary
@@ -49,8 +50,8 @@
           @click="handleNodeClickEvent(node)"
         >
           {{ node.label }}
-          <!-- -> {{ node.connected }} -->
-        </NButton>
+          -> {{ node.connected }}
+        </NButton> -->
       </NSpace>
     </NSpace>
 
@@ -59,7 +60,7 @@
         뒤로가기
       </NButton>
   
-      <NButton type="primary" size="large">
+      <NButton type="primary" size="large" @click="handleDownloadButtonClickEvent">
         연결 및 다운로드
       </NButton>
     </NSpace>
@@ -67,15 +68,10 @@
 </template>
 
 <script setup lang="ts">
-import { useColumnLinker } from '~/composables/use-column-linker'
+import { useColumnLinker } from '@/composables/use-column-linker'
+import type { Node } from '@/components/link-columns/link-columns.type';
 
 const { standardColunms, restColunms } = useColumnLinker()
-
-interface Node {
-  id: number
-  label: string
-  connected?: number
-}
 
 const nodes1 = ref<Node[]>([])
 const nodes2 = ref<Node[]>([])
@@ -85,6 +81,9 @@ const nodeRefs = ref<{ [key: string]: VNode | null }>({});
 // const svgPath = ref<string>(''); // Path 정보를 저장
 // const svgRef = ref<SVGSVGElement | null>(null); // SVG 요소에 대한 참조
 
+function setNodeRef2 (el: VNode |null) {
+
+}
 
 function setNodeRef (id: number, el: VNode | null) {
   nodeRefs.value[String(id)] = el;
@@ -172,6 +171,10 @@ function showConnectedStatus (): string[] {
   }
 
   return result
+}
+
+function handleDownloadButtonClickEvent () {
+  
 }
 
 watch(
