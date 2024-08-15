@@ -1,0 +1,94 @@
+$green-color: #18a058; // n-color
+$green-border-focus: #36ad6a; // n-border-focus
+$green-back-color: rgb(54, 173, 106, 0.1);
+$green-index-back-color: rgb(54, 173, 106, 0.2);
+
+$blue-color: #2080f0;
+$blue-border-focus: #4098fc;
+$blue-back-color: rgb(64, 152, 252, 0.1);
+$blue-index-back-color: rgb(64, 152, 252, 0.2);
+
+$grey-color: #8e8e8e;
+$grey-border-focus: #828282;
+$grey-back-color: rgb(130, 130, 130, 0.1);
+$grey-index-back-color: rgb(130, 130, 130, 0.2);
+
+
+$red-color: #d03050;
+$red-border-focus: #de576d;
+$red-back-color: rgb(222, 87, 109, 0.1);
+$red-index-back-color: rgb(222, 87, 109, 0.2);
+
+@mixin card-color($color, $border, $back, $index-back) {
+  border: 1px solid $border;
+  color: $color;
+  background-color: $back;
+  
+  .item__index {
+    background-color: $index-back;
+    border-color: $index-back;
+    color: $color;
+  }
+}
+
+
+.item {
+  border: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 34px;
+  border-radius: 4px;
+  overflow: hidden;
+
+  &__index {
+    border-right: 1px solid #eee;
+    flex: 0 0 25px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #fafafc;
+    color: #848484;
+
+    > i { display: none; }
+  }
+
+
+  &__body {
+    flex: 1 1 auto;
+  }
+
+  /* type */
+  &.is-button {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    color: #767c82;
+    
+    &:hover { background: rgba(46, 51, 56, .09); }
+  }
+
+
+  /* closable */
+  &.is-closable {
+    .item__index {
+      cursor: pointer;
+
+      &:hover {
+        background-color: #eee;
+
+        > i { display: block; }
+        > span { display: none; }
+      }
+      }
+  }
+
+
+  &.is-active {
+    @include card-color($red-color, $red-border-focus, $red-back-color, $red-index-back-color)
+  }
+
+  &.is-green { @include card-color($green-color, $green-border-focus, $green-back-color, $green-index-back-color) }
+  &.is-blue { @include card-color($blue-color, $blue-border-focus, $blue-back-color, $blue-index-back-color) }
+}

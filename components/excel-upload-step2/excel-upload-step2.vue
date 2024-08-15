@@ -9,10 +9,33 @@
         class="column-list__header"
       >
         <div>
-          <strong>기준 엑셀 컬럼</strong>
+          <strong>
+            기준 엑셀 컬럼
+
+            <NTooltip trigger="hover">
+              <template #trigger>
+                <NButton circle size="small">
+                  <NIcon size="16">
+                    <InfoIcon />
+                  </NIcon>
+                </NButton>
+              </template>
+
+              해당 칼럼은 고정입니다.
+            </NTooltip>
+          </strong>
+
           <strong>업로드된 엑셀 컬럼</strong>
         </div>
-        <span>연결된 컬럼</span>
+
+        <span>
+          연결된 컬럼
+          <NButton circle size="small">
+            <NIcon size="16">
+              <RefreshIcon />
+            </NIcon>
+          </NButton>
+        </span>
       </NLayoutHeader>
       
       <NLayout
@@ -31,17 +54,17 @@
             <NGi class="column-list__grid-item">
               <NScrollbar class="column-list__scroll">
                 <NFlex vertical>
-                  <NButton
+                  <ColumnCard
                     v-for="node in nodes1"
                     :key="node.id"
-                    tertiary
-                    strong
-                    :secondary="isSelected(node)"
-                    :type="isConnected(node, 'primary')"
+                    :id="node.id + 1"
+                    :color="isConnected(node, 'green')"
+                    :is-active="isActive(node)"
+                    type="button"
                     @click="handleNodeClickEvent(node)"
                   >
                     {{ node.label }}
-                  </NButton>
+                  </ColumnCard>
                 </NFlex>
               </NScrollbar>
             </NGi>
@@ -49,18 +72,17 @@
             <NGi class="column-list__grid-item">
               <NScrollbar class="column-list__scroll">
                 <NFlex vertical>
-                  <NButton
+                  <ColumnCard
                     v-for="node in nodes2"
                     :key="node.id"
-                    tertiary
-                    strong
-                    :secondary="isSelected(node)"
-                    :type="isConnected(node, 'info')"
+                    :id="node.id + 1"
+                    :color="isConnected(node, 'blue')"
+                    :is-active="isActive(node)"
+                    type="button"
                     @click="handleNodeClickEvent(node)"
                   >
-                    <NTag size="small">N</NTag>
                     {{ node.label }}
-                  </NButton>
+                  </ColumnCard>
                 </NFlex>
               </NScrollbar>
             </NGi>
@@ -85,7 +107,9 @@
             >
               <p class="item__content">
                 <span>{{ column[1] }}</span>
-                <b> → </b>
+                <NIcon size="16">
+                  <LinkIcon />
+                </NIcon>
                 <span>{{ column[2] }}</span>
               </p>
             </ColumnCard>
@@ -121,7 +145,11 @@
 import { useColumnLinker } from '@/composables/use-column-linker'
 import type { Node } from '@/components/link-columns/link-columns.type';
 import { NLayout, NLayoutSider, NScrollbar } from 'naive-ui';
-import { Close as CloseIcon } from "@vicons/ionicons5"
+import {
+  Refresh as RefreshIcon,
+  InformationCircleOutline as InfoIcon,
+  LinkOutline as LinkIcon
+} from "@vicons/ionicons5"
 
 
 const { standardColunms, restColunms } = useColumnLinker()
@@ -142,12 +170,12 @@ function setNodeRef (id: number, el: VNode | null) {
   nodeRefs.value[String(id)] = el;
 };
 
-function isSelected (node: Node) {
-  return activeNodes.value.includes(node)
+function isConnected (node: Node, color: 'green' | 'blue') {
+  return node.connected !== undefined ? color : 'grey'
 }
 
-function isConnected (node: Node, type: string) {
-  return node.connected !== undefined ? type : (isSelected(node) ? type : 'tertiary')
+function isActive (node: Node): boolean {
+  return activeNodes.value.includes(node)
 }
 
 
@@ -378,7 +406,7 @@ $content-width: calc(100% - $sider-width + 1px);
     }
 
       
-    > b {
+    > i {
       text-align: center;
       flex: 0 0 5%;
       color: #18a058;

@@ -1,5 +1,11 @@
 <template>
-  <div :class="['item', { 'is-closable': props.closable }]">
+  <div :class="[
+    'item',
+    `is-${props.type}`,
+    `is-${props.color}`,
+    { 'is-closable': props.closable },
+    { 'is-active': props.isActive }
+  ]">
     <span
       class="item__index"
       @click="handleIndexBlockEvent"
@@ -10,7 +16,12 @@
       </NIcon>
     </span>
 
-    <slot />
+    <div
+      class="item__body"
+      @click="handleBodyClickEvent"
+    >
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -18,46 +29,23 @@
 import type { ColumnCardProps, ColumnCardEmits } from "./column-card.type"
 import { Close as CloseIcon } from "@vicons/ionicons5"
 
-const props = defineProps<ColumnCardProps>()
+const props = withDefaults(defineProps<ColumnCardProps>(), {
+  type: 'block',
+  color: 'grey',
+  isCloseable: false,
+  isActive: false
+})
 const emits = defineEmits<ColumnCardEmits>()
 
 function handleIndexBlockEvent () {
-  emits('click', props.id)
+  emits('close', props.id)
+}
+
+function handleBodyClickEvent () {
+  emits('click')
 }
 </script>
 
-<style scoped lang="scss">
-.item {
-  border: 1px solid #eee;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  height: 34px;
-
-  &__index {
-    border-right: 1px solid #eee;
-    flex: 0 0 25px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #fafafc;
-
-    > i { display: none; }
-  }
-
-
-  &.is-closable {
-    .item__index {
-      cursor: pointer;
-
-      &:hover {
-        background-color: #eee;
-
-        > i { display: block; }
-        > span { display: none; }
-      }
-    }
-  }
-}
+<style lang="scss" scoped>
+  @import "column-card";
 </style>
