@@ -2,7 +2,7 @@
   <NFlex justify="center" align="center" vertical>
     <h2>컬럼 연결하기</h2>
     
-    <!-- {{  activeNodes  }} -->
+    <!-- {{  linkedNodeList  }} -->
 
     <NLayout class="column-list">
       <NLayoutHeader
@@ -21,7 +21,9 @@
                 </NButton>
               </template>
 
-              해당 칼럼은 고정입니다.
+              - 해당 칼럼은 고정입니다. <br>
+              - 현재는 1:1 매칭만 가능합니다. <br>
+              - 컬럼 순서는 기준 엑셀 컬럼의 순서를 따릅니다.
             </NTooltip>
           </strong>
 
@@ -30,7 +32,11 @@
 
         <span>
           연결된 컬럼
-          <NButton circle size="small">
+          <NButton
+            circle
+            size="small"
+            @click="handleRefershLinkButton"
+          >
             <NIcon size="16">
               <RefreshIcon />
             </NIcon>
@@ -55,7 +61,7 @@
               <NScrollbar class="column-list__scroll">
                 <NFlex vertical>
                   <ColumnCard
-                    v-for="node in nodes1"
+                    v-for="node in primaryNodeList"
                     :key="node.id"
                     :id="node.id + 1"
                     :color="isConnected(node, 'green')"
@@ -64,6 +70,7 @@
                     @click="handleNodeClickEvent(node)"
                   >
                     {{ node.label }}
+                    <!-- {{ node.connected }} -->
                   </ColumnCard>
                 </NFlex>
               </NScrollbar>
@@ -73,7 +80,7 @@
               <NScrollbar class="column-list__scroll">
                 <NFlex vertical>
                   <ColumnCard
-                    v-for="node in nodes2"
+                    v-for="node in minorNodeList"
                     :key="node.id"
                     :id="node.id + 1"
                     :color="isConnected(node, 'blue')"
@@ -82,6 +89,7 @@
                     @click="handleNodeClickEvent(node)"
                   >
                     {{ node.label }}
+                    <!-- {{ node.connected }} -->
                   </ColumnCard>
                 </NFlex>
               </NScrollbar>
@@ -99,18 +107,24 @@
         >
           <NFlex vertical>
             <ColumnCard
-              v-for="(column, index) in showConnectedStatus()"
-              :key="`${index}_pair`"
-              :id="Number(column[0])"
+              v-for="column in displayLinkedNodeList"
+              :key="`${column.id}_pair`"
+              :id="column.id + 1"
               closable
               class="item"
+              @close="handleUnlinkButton(column.id)"
             >
               <p class="item__content">
-                <span>{{ column[1] }}</span>
+                <span>{{ column.primaryLabel }}</span>
                 <NIcon size="16">
                   <LinkIcon />
                 </NIcon>
-                <span>{{ column[2] }}</span>
+                <span>
+                  <NTag size="small" round>
+                    {{ column.minorId + 1 }}
+                  </NTag>
+                  {{ column.minorLabel }}
+                </span>
               </p>
             </ColumnCard>
           </NFlex>
@@ -125,15 +139,14 @@
       >
         <NH5>옵션 설정</NH5>
 
-        <NCheckbox size="large" label="기준 엑셀 데이터 모두 포함" />
+        <NCheckbox size="large" label="기준 엑셀 데이터 모두 포함 (기본)" disabled/>
       </NLayout-footer>
     </NLayout>
 
     <NSpace class="button-area">
-      <NButton secondary size="large">
-        뒤로가기
+      <NButton type="info" size="large">
+        컬럼 저장하기
       </NButton>
-  
       <NButton type="primary" size="large" @click="handleDownloadButtonClickEvent">
         미리보기
       </NButton>
@@ -142,9 +155,11 @@
 </template>
 
 <script setup lang="ts">
+import { useMessage, type UploadFileInfo } from "naive-ui"
 import { useColumnLinker } from '@/composables/use-column-linker'
 import type { Node } from '@/components/link-columns/link-columns.type';
-import { NLayout, NLayoutSider, NScrollbar } from 'naive-ui';
+import type { ConnectedStatusType } from "./excel-upload-step2.type"
+
 import {
   Refresh as RefreshIcon,
   InformationCircleOutline as InfoIcon,
@@ -152,114 +167,113 @@ import {
 } from "@vicons/ionicons5"
 
 
+const message = useMessage()
 const { standardColunms, restColunms } = useColumnLinker()
 
-const nodes1 = ref<Node[]>([])
-const nodes2 = ref<Node[]>([])
+const primaryNodeList = ref<Node[]>([])
+const minorNodeList = ref<Node[]>([])
+const linkedNodeList = ref<Node[]>([])
 
-const activeNodes = ref<Node[]>([])
-const nodeRefs = ref<{ [key: string]: VNode | null }>({});
-// const svgPath = ref<string>(''); // Path 정보를 저장
-// const svgRef = ref<SVGSVGElement | null>(null); // SVG 요소에 대한 참조
-
-function setNodeRef2 (el: VNode |null) {
-
-}
-
-function setNodeRef (id: number, el: VNode | null) {
-  nodeRefs.value[String(id)] = el;
-};
+const displayLinkedNodeList = ref<ConnectedStatusType[]>([])
 
 function isConnected (node: Node, color: 'green' | 'blue') {
   return node.connected !== undefined ? color : 'grey'
 }
 
 function isActive (node: Node): boolean {
-  return activeNodes.value.includes(node)
+  return linkedNodeList.value.includes(node)
 }
 
-
-// const getElementPosition = (el: HTMLElement) => {
-//   const rect = el.getBoundingClientRect();
-//   return {
-//     x: rect.left + window.scrollX,
-//     y: rect.top + window.scrollY
-//   };
-// };
-
-// // SVG 컨테이너의 상대적 좌표를 계산합니다
-// const getSVGPosition = (svg: SVGSVGElement) => {
-//   const rect = svg.getBoundingClientRect();
-//   return {
-//     x: rect.left + window.scrollX,
-//     y: rect.top + window.scrollY
-//   };
-// };
-
-// const drawPathBetweenNodes = (node1: Node, node2: Node) => {
-//   const node1El = nodeRefs.value[String(node1.id)] as HTMLElement | null;
-//   const node2El = nodeRefs.value[String(node2.id)] as HTMLElement | null;
-//   const svg = svgRef.value;
-
-//   if (!node1El || !node2El || !svg) return;
-
-//   const node1Pos = getElementPosition(node1El);
-//   const node2Pos = getElementPosition(node2El);
-//   const svgPos = getSVGPosition(svg);
-
-//   const svgX1 = node1Pos.x - svgPos.x;
-//   const svgY1 = node1Pos.y - svgPos.y;
-//   const svgX2 = node2Pos.x - svgPos.x;
-//   const svgY2 = node2Pos.y - svgPos.y;
-
-//   svgPath.value = `M ${svgX1} ${svgY1} L ${svgX2} ${svgY2}`;
-// };
-
 function handleNodeClickEvent (node: Node) {
-  // 이미 연결된 노드를 눌렀을 때는 기존 연결 해제
+  const nodeList = (node.type === 'primary') ? minorNodeList : primaryNodeList
+  
+  // 1) 이미 연결된 노드를 눌렀을 때는 기존 연결 해제
   if (node.connected !== undefined) {
-    
-    nodes2.value.forEach((n: Node) => {
+    nodeList.value.forEach((n: Node) => {
       if (n.id === node.connected) {
         n.connected = undefined
         node.connected = undefined
       }
     })
 
+    handleFlusLinkedNodeList()
     return
   }
 
-  activeNodes.value.push(node)
-
-  if (activeNodes.value.length === 2) {
-    activeNodes.value[0].connected = activeNodes.value[1].id
-    activeNodes.value[1].connected = activeNodes.value[0].id
-    
-    // const [node1, node2] = activeNodes.value
-    // drawPathBetweenNodes(node1, node2);
-    // console.log(node.id,  'd?')
-
-    activeNodes.value = []
+  // 2) 같은 컬럼 타입인 경우 알람 + 선택 해제
+  if (
+    linkedNodeList.value.length === 1 &&
+    linkedNodeList.value[0].type === node.type
+  ) {
+    handleFlusLinkedNodeList()
+    return message.error('같은 종류의 컬럼은 연결할 수 없습니다.')
   }
+
+
+  linkedNodeList.value.push(node)
+
+  if (linkedNodeList.value.length === 2) {
+    linkedNodeList.value[0].connected = linkedNodeList.value[1].id
+    linkedNodeList.value[1].connected = linkedNodeList.value[0].id
+
+    linkedNodeList.value = []
+  }
+
+  displayLinkedNodeList.value = setDisplayLinkedNodeList()
 }
 
-function showConnectedStatus (): string[][] {
-  const result: string[][] = []
-  for (const node of nodes1.value) {
-    if (node.connected) {
-      result.push([
-        String(node.id + 1),
-        node.label,
-        nodes2.value[node.connected].label
-      ])
+function setDisplayLinkedNodeList (): ConnectedStatusType[] {
+  const result: ConnectedStatusType[] = []
+
+  for (const node of primaryNodeList.value) {
+    if (node.connected !== undefined) {
+      const minor = minorNodeList.value[node.connected]
+      const item = Object.assign({
+        id: node.id,
+        primaryLabel: node.label,
+        minorLabel: minor.label,
+        minorId: minor.id
+      }, {})
+      result.push(item)
     }
   }
 
   return result
 }
 
-function handleMouseEnterEvent (index: number) {
-  
+function handleFlusLinkedNodeList () {
+  linkedNodeList.value.forEach((node: Node) => {
+    node.connected = undefined
+  })
+
+  linkedNodeList.value = []
+  displayLinkedNodeList.value = setDisplayLinkedNodeList()
+}
+
+function handleRefershLinkButton () {
+  // 연결 모두 해제
+  primaryNodeList.value.forEach((node: Node) => {
+    if (node.connected !== undefined) {
+      const minor = minorNodeList.value[node.connected]
+      minor.connected = undefined
+      node.connected = undefined
+    }
+  })
+
+  displayLinkedNodeList.value = setDisplayLinkedNodeList()
+}
+
+function handleUnlinkButton (id: number) {
+  // 연결 모두 해제
+  primaryNodeList.value.forEach((node: Node) => {
+    if (node.connected !== undefined && node.id == id) {
+      const minor = minorNodeList.value[node.connected]
+      minor.connected = undefined
+      node.connected = undefined
+    }
+  })
+
+  displayLinkedNodeList.value = setDisplayLinkedNodeList()
 }
 
 function handleDownloadButtonClickEvent () {
@@ -269,14 +283,14 @@ function handleDownloadButtonClickEvent () {
 watch(
   () => standardColunms.value,
   (newValue: Node[]) => {
-    nodes1.value = newValue
+    primaryNodeList.value = newValue
   }
 )
 
 watch(
   () => restColunms.value,
   (newValue: Node[]) => {
-    nodes2.value = newValue
+    minorNodeList.value = newValue
   }
 )
 </script>
@@ -364,31 +378,6 @@ $content-width: calc(100% - $sider-width + 1px);
 }
 
 .item {
-  border: 1px solid #eee;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  height: 34px;
-
-  &__index {
-    border-right: 1px solid #eee;
-    flex: 0 0 25px;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #fafafc;
-    cursor: pointer;
-
-    > i { display: none; }
-
-    &:hover {
-      background-color: #eee;
-      > i { display: block; }
-      > span { display: none; }
-    }
-  }
-
   &__content {
     flex: 1 1 auto;
     display: flex;
@@ -399,17 +388,20 @@ $content-width: calc(100% - $sider-width + 1px);
     > span {
       flex: 0 0 45%;
       text-align: center;
-      max-width: 100%;
+      max-width: 45%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-
       
     > i {
       text-align: center;
       flex: 0 0 5%;
       color: #18a058;
+    }
+
+    .n-tag {
+      font-size: 10px;
     }
   }
 }

@@ -39,7 +39,7 @@
 import * as XLSX from "xlsx"
 import { useMessage, type UploadFileInfo } from "naive-ui"
 
-import type { Node } from "@/components/link-columns/link-columns.type"
+import type { Node, NodeType } from "@/components/link-columns/link-columns.type"
 
 import { useColumnLinker } from "~/composables/use-column-linker"
 
@@ -72,15 +72,15 @@ async function handleTransButtonClickEvent () {
   const rest = (restFileList.value[0].file) as File
 
   // console.log(file)
-  const standardColumnsList = await readFileToArray(standard)
-  const restColumnsList = await readFileToArray(rest) // TODO: 0번째 파일만
+  const standardColumnsList = await readFileToArray(standard, 'primary')
+  const restColumnsList = await readFileToArray(rest, 'minor') // TODO: 0번째 파일만
 
   // console.log(standardColumnsList, restColumnsList)
   standardColunms.value = standardColumnsList
   restColunms.value = restColumnsList
 }
 
-function readFileToArray (file: File): Promise<Node[]> {
+function readFileToArray (file: File, type: NodeType): Promise<Node[]> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
@@ -96,7 +96,7 @@ function readFileToArray (file: File): Promise<Node[]> {
         const jsonData: Array<string[]> = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converts sheet to array of arrays
 
         // console.log('Parsed Data:', jsonData[0]);
-        const result = jsonData[0].map((item, id) => ({ label: item, id }))
+        const result = jsonData[0].map((item, id) => ({ label: item, id, type }))
         
         resolve(result) 
       }
