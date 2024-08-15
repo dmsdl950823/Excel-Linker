@@ -161,7 +161,7 @@
         컬럼 저장하기
       </NButton>
       <NButton type="primary" size="large" @click="handleDownloadButtonClickEvent">
-        미리보기
+        다운로드
       </NButton>
     </NSpace>
   </NFlex>
@@ -170,9 +170,11 @@
 <script setup lang="ts">
 import { useMessage, type UploadFileInfo } from "naive-ui"
 import { useColumnLinker } from '@/composables/use-column-linker'
-import type { Node } from '@/components/link-columns/link-columns.type';
+import type { Node, Row } from '@/components/link-columns/link-columns.type';
 import type { ConnectedStatusType, OptionType } from "./excel-upload-step2.type"
 
+import * as XLSX from "xlsx"
+import { saveAs } from "file-saver"
 import {
   Refresh as RefreshIcon,
   InformationCircleOutline as InfoIcon,
@@ -297,25 +299,44 @@ function handleUnlinkButton (id: number) {
 
 function handleDownloadButtonClickEvent () {
   const columnHeader: string[] = []
-  const primaryRows: string[][] = []
-  const minorRows: string[][] = []
+  const minorRows: Row[] = []
+  // console.log(minorColDataList.value)
 
   primaryNodeList.value.map((node: Node) => {
-    // console.log(node.id, node.connected)
-
     // 컬럼 / 데이터 값 생성
     const headerItem = primaryColHeaderList.value[node.id]
     columnHeader.push(headerItem.label)
+    console.log(node.id, node.connected, headerItem.label)
 
-    const minorCellItem = minorColDataList.value[node.id]
+    const minorCellItem = (node.connected !== undefined) ? minorColDataList.value[node.connected] : []
     minorRows.push(minorCellItem)
   })
 
-  console.log(columnHeader)
-  const rowChange = minorRows[0].map((_, colIndex) => minorRows.map(row => row[colIndex]))
-  // console.log(rowChange, minorRows)
+  // console.log(columnHeader)
+  // console.log(minorRows)
 
-  console.log(minorRowList.value[0], '?')
+  const minorRowList = minorRows[0].map((_, colIndex) => minorRows.map(row => row[colIndex]))
+  // console.log(minorRowList)
+  
+  const dataArray = [columnHeader, ...minorRowList]
+  exportToExcel(dataArray)
+}
+
+function exportToExcel (data: string[][]) {
+    // 1. 2차원 배열을 워크시트로 변환
+  const worksheet = XLSX.utils.aoa_to_sheet(data);
+
+  // 2. 새로운 워크북 생성 및 워크시트 추가
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+
+  // 3. 워크북을 바이너리 데이터로 변환
+  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+
+  // 4. Blob 객체 생성 및 파일 저장
+  const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+  saveAs(blob, 'example.xlsx');
+
 }
 
 watch(

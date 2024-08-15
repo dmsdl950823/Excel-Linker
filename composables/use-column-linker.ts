@@ -9,8 +9,8 @@ const primaryRowList = ref<Row[]>([])
 const minorRowList = ref<Row[]>([])
 
 // 엑셀 열 데이터 (N열의 셀 모음 - column data)
-const primaryColDataList = ref<string[][]>([])
-const minorColDataList = ref<string[][]>([])
+const primaryColDataList = ref<Row[]>([])
+const minorColDataList = ref<Row[]>([])
 
 export function useColumnLinker () {
   return {
