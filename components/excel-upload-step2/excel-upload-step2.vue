@@ -23,7 +23,9 @@
 
               - 해당 칼럼은 고정입니다. <br>
               - 현재는 1:1 매칭만 가능합니다. <br>
-              - 컬럼 순서는 기준 엑셀 컬럼의 순서를 따릅니다.
+              - 컬럼 순서는 기준 엑셀 컬럼의 순서를 따릅니다. <br>
+              - 컬럼 병합은 인식할 수 없습니다. <br>
+              - 현재는 컬럼의 가장 첫 번째 행을 기준으로 컬렴명을 지정합니다.
             </NTooltip>
           </strong>
 
@@ -139,12 +141,23 @@
       >
         <NH5>옵션 설정</NH5>
 
-        <NCheckbox size="large" label="기준 엑셀 데이터 모두 포함 (기본)" disabled/>
+        <NCheckbox
+          size="large"
+          label="기준 엑셀 체크되어있지 않은 헤더 데이터 모두 포함 (기본)"
+          disabled
+          :checked="option.option1"
+        />
+        <NCheckbox
+          size="large"
+          label="기준 엑셀 행 데이터 모두 포함"
+          disabled
+          :checked="option.option2"
+        />
       </NLayout-footer>
     </NLayout>
 
     <NSpace class="button-area">
-      <NButton type="info" size="large">
+      <NButton type="info" size="large" disabled>
         컬럼 저장하기
       </NButton>
       <NButton type="primary" size="large" @click="handleDownloadButtonClickEvent">
@@ -158,7 +171,7 @@
 import { useMessage, type UploadFileInfo } from "naive-ui"
 import { useColumnLinker } from '@/composables/use-column-linker'
 import type { Node } from '@/components/link-columns/link-columns.type';
-import type { ConnectedStatusType } from "./excel-upload-step2.type"
+import type { ConnectedStatusType, OptionType } from "./excel-upload-step2.type"
 
 import {
   Refresh as RefreshIcon,
@@ -168,13 +181,19 @@ import {
 
 
 const message = useMessage()
-const { standardColunms, restColunms } = useColumnLinker()
+const { primaryColHeaderList, minorColHeaderList, minorRowList, primaryColDataList, minorColDataList } = useColumnLinker()
 
 const primaryNodeList = ref<Node[]>([])
 const minorNodeList = ref<Node[]>([])
 const linkedNodeList = ref<Node[]>([])
 
 const displayLinkedNodeList = ref<ConnectedStatusType[]>([])
+const test = ref<boolean>(true)
+
+const option = ref<OptionType>({
+  option1: true,
+  option2: false
+})
 
 function isConnected (node: Node, color: 'green' | 'blue') {
   return node.connected !== undefined ? color : 'grey'
@@ -277,18 +296,37 @@ function handleUnlinkButton (id: number) {
 }
 
 function handleDownloadButtonClickEvent () {
-  
+  const columnHeader: string[] = []
+  const primaryRows: string[][] = []
+  const minorRows: string[][] = []
+
+  primaryNodeList.value.map((node: Node) => {
+    // console.log(node.id, node.connected)
+
+    // 컬럼 / 데이터 값 생성
+    const headerItem = primaryColHeaderList.value[node.id]
+    columnHeader.push(headerItem.label)
+
+    const minorCellItem = minorColDataList.value[node.id]
+    minorRows.push(minorCellItem)
+  })
+
+  console.log(columnHeader)
+  const rowChange = minorRows[0].map((_, colIndex) => minorRows.map(row => row[colIndex]))
+  // console.log(rowChange, minorRows)
+
+  console.log(minorRowList.value[0], '?')
 }
 
 watch(
-  () => standardColunms.value,
+  () => primaryColHeaderList.value,
   (newValue: Node[]) => {
     primaryNodeList.value = newValue
   }
 )
 
 watch(
-  () => restColunms.value,
+  () => minorColHeaderList.value,
   (newValue: Node[]) => {
     minorNodeList.value = newValue
   }

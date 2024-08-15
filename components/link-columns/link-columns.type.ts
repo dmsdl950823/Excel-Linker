@@ -6,3 +6,5 @@ export interface Node {
 }
 
 export type NodeType = 'primary' | 'minor'
+
+export type Row = string[]

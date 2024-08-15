@@ -20,18 +20,9 @@
       </NGi>
     </NGrid>
     
-    <NGrid x-gap="10" :cols="2">
-      <NGi>
-        <NButton type="primary" size="large" @click="handleTransButtonClickEvent">
-          변환하기
-        </NButton>
-      </NGi>
-      <NGi>
-        <NButton type="info" size="large">
-          컬럼 저장하기
-        </NButton>
-      </NGi>
-    </NGrid>
+    <NButton type="primary" size="large" @click="handleTransButtonClickEvent">
+      변환하기
+    </NButton>   
   </NSpace>
 </template>
 
@@ -39,48 +30,61 @@
 import * as XLSX from "xlsx"
 import { useMessage, type UploadFileInfo } from "naive-ui"
 
-import type { Node, NodeType } from "@/components/link-columns/link-columns.type"
+import type { FileDivisionType } from "./excel-upload-step1.type"
+import type { Node, NodeType, Row } from "@/components/link-columns/link-columns.type"
 
 import { useColumnLinker } from "~/composables/use-column-linker"
 
 const message = useMessage()
-const { standardColunms, restColunms } = useColumnLinker()
+const { primaryColHeaderList, minorColHeaderList, primaryRowList, minorRowList, primaryColDataList, minorColDataList } = useColumnLinker()
 
-const standardFile = ref<UploadFileInfo | null>(null)
-const restFileList = ref<UploadFileInfo[]>([])
+const primaryFile = ref<UploadFileInfo | null>(null)
+const minorFileList = ref<UploadFileInfo[]>([])
+
 const dataArray = ref<any[]>([]); // 데이터를 저장할 배열
 
 function handleUploadStandardFileList (fileList: UploadFileInfo[]) {
-  if (fileList.length === 1) standardFile.value = fileList[0]
-  else standardFile.value = null
+  if (fileList.length === 1) primaryFile.value = fileList[0]
+  else primaryFile.value = null
 }
 function handleUploadFileList (fileList: UploadFileInfo[]) {
-  restFileList.value = fileList
+  minorFileList.value = fileList
 }
 
 async function handleTransButtonClickEvent () {
-  if (!standardFile.value) {
+  if (!primaryFile.value) {
     message.error('기준 컬럼을 등록해주세요.')
     return
   }
-  if (restFileList.value.length === 0) {
+  if (minorFileList.value.length === 0) {
     message.error('엑셀파일을 등록해주세요.')
     return
   }
 
-  const standard = (standardFile.value.file) as File
-  const rest = (restFileList.value[0].file) as File
+  const standard = (primaryFile.value.file) as File
+  const rest = (minorFileList.value[0].file) as File
 
   // console.log(file)
-  const standardColumnsList = await readFileToArray(standard, 'primary')
-  const restColumnsList = await readFileToArray(rest, 'minor') // TODO: 0번째 파일만
+  try {
+    const { header: primaryHeaderList, data: primaryDataList } = await readFileToArray(standard, 'primary')
+    const { header: minorHeaderList, data: minorDataList } = await readFileToArray(rest, 'minor') // TODO: 0번째 파일만
+  
+    // console.log(primaryHeaderList, minorHeaderList)
 
-  // console.log(standardColumnsList, restColumnsList)
-  standardColunms.value = standardColumnsList
-  restColunms.value = restColumnsList
+    primaryColHeaderList.value = primaryHeaderList
+    minorColHeaderList.value = minorHeaderList
+
+    primaryRowList.value = primaryDataList
+    minorRowList.value = minorDataList
+    
+    // primaryColDataList.value = setRowToColData(primaryDataList)
+    minorColDataList.value = setRowToColData(minorDataList, minorHeaderList.length)
+  } catch (error) {
+    message.error('파일을 변환하던 도중 문제가 발생했습니다.')
+  }
 }
 
-function readFileToArray (file: File, type: NodeType): Promise<Node[]> {
+function readFileToArray (file: File, type: NodeType): Promise<FileDivisionType> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsArrayBuffer(file);
@@ -95,10 +99,14 @@ function readFileToArray (file: File, type: NodeType): Promise<Node[]> {
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
         const jsonData: Array<string[]> = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Converts sheet to array of arrays
 
-        // console.log('Parsed Data:', jsonData[0]);
-        const result = jsonData[0].map((item, id) => ({ label: item, id, type }))
+        // console.log('Parsed Data:', jsonData);
+        const columnList = jsonData[0].map((item, id) => ({ label: item, id, type }))
+        const dataList = jsonData.slice(1) // 컬럼명 이후의 데이터는 모두 가져옴
         
-        resolve(result) 
+        resolve({
+          header: columnList,
+          data: dataList
+        })
       }
     }
 
@@ -106,6 +114,18 @@ function readFileToArray (file: File, type: NodeType): Promise<Node[]> {
       reject(e)
     }
   })
+}
+
+/**
+ * row 한줄의 데이터를 index 형태로 col 데이터로 변환
+ * (2중 배열 뒤집기)
+ */
+function setRowToColData (rowList: Row[], colLen: number): string[][] {
+  const result = Array.from({ length: colLen }, () => [])
+  // console.log(data, colLen, result)
+
+  const switchList = rowList[0].map((_, colIndex) => rowList.map(row => row[colIndex]));
+  return switchList
 }
 </script>
 

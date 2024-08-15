@@ -4,3 +4,8 @@ export interface ConnectedStatusType {
   minorLabel: string
   minorId: number
 }
+
+export interface OptionType {
+  option1: boolean
+  option2: boolean
+}
