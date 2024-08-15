@@ -38,3 +38,13 @@ h2 {
 .button-area {
   margin-top: 25px;
 }
+
+.flex {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &.-vertical {
+    flex-direction: column;
+  }
+}

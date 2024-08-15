@@ -8,7 +8,7 @@
   >
     <NUploadDragger>
       <div style="margin-bottom: 12px">
-        <NIcon size="48" :depth="3">
+        <NIcon size="48" :depth="5">
           <ArchiveIcon />
         </NIcon>
       </div>
@@ -24,7 +24,9 @@
 
 <script setup lang="ts">
 import type { UploadFileInfo } from "naive-ui"
+import { ArchiveOutline as ArchiveIcon } from "@vicons/ionicons5"
 import type { UploadComponentProps, UploadComponentEmits } from "./excel-upload.type"
+
 
 const props = withDefaults(defineProps<UploadComponentProps>(), {
   placeholder: "파일을 올려주세요.",
