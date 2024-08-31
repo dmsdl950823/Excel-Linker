@@ -1,5 +1,7 @@
 <template>
-  <NSpace justify="center" vertical align="center">
+  <NSpace justify="center" vertical align="center" class="excel-upload-step1">
+    <h1>EXCEL LINKER</h1>
+
     <h2>파일 올리기</h2>
     
     <NGrid x-gap="20" :cols="2">
@@ -33,10 +35,12 @@ import { useMessage, type UploadFileInfo } from "naive-ui"
 import type { FileDivisionType } from "./excel-upload-step1.type"
 import type { Node, NodeType, Row } from "@/components/link-columns/link-columns.type"
 
+import { useExcelLinker } from "~/composables/use-excel-linker"
 import { useColumnLinker } from "~/composables/use-column-linker"
 
 const message = useMessage()
 const { primaryColHeaderList, minorColHeaderList, primaryRowList, minorRowList, primaryColDataList, minorColDataList } = useColumnLinker()
+const { setCurrentStep } = useExcelLinker()
 
 const primaryFile = ref<UploadFileInfo | null>(null)
 const minorFileList = ref<UploadFileInfo[]>([])
@@ -79,6 +83,8 @@ async function handleTransButtonClickEvent () {
     
     // primaryColDataList.value = setRowToColData(primaryDataList)
     minorColDataList.value = setRowToColData(minorDataList, minorHeaderList.length)
+
+    setCurrentStep(2)
   } catch (error) {
     message.error('파일을 변환하던 도중 문제가 발생했습니다.')
   }
@@ -130,4 +136,5 @@ function setRowToColData (rowList: Row[], colLen: number): string[][] {
 </script>
 
 <style lang="scss" scoped>
+  @import "excel-upload-step1";
 </style>

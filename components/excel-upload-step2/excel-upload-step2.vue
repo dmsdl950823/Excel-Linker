@@ -306,19 +306,30 @@ function handleDownloadButtonClickEvent () {
     // 컬럼 / 데이터 값 생성
     const headerItem = primaryColHeaderList.value[node.id]
     columnHeader.push(headerItem.label)
-    console.log(node.id, node.connected, headerItem.label)
-
+    
     const minorCellItem = (node.connected !== undefined) ? minorColDataList.value[node.connected] : []
     minorRows.push(minorCellItem)
+
+    // console.log(node.id, node.connected, headerItem.label, minorCellItem)
   })
 
   // console.log(columnHeader)
   // console.log(minorRows)
 
-  const minorRowList = minorRows[0].map((_, colIndex) => minorRows.map(row => row[colIndex]))
-  // console.log(minorRowList)
+  let minorRowList: Row[] = []
+
+  // 데이터가 있는 열 기준으로 뒤집기
+  for (let i = 0; i < minorRows.length; i++) {
+    if (minorRows[i].length > 0) {
+      minorRowList = minorRows[i].map((_, colIndex) => minorRows.map(row => row[colIndex]))
+      break
+    }
+  }
+
+  // console.log('@@ minorRowList :: ', minorRowList)
   
   const dataArray = [columnHeader, ...minorRowList]
+  // console.log('결과', dataArray)
   exportToExcel(dataArray)
 }
 
@@ -352,6 +363,11 @@ watch(
     minorNodeList.value = newValue
   }
 )
+
+onMounted(() => {
+  primaryNodeList.value = primaryColHeaderList.value
+  minorNodeList.value = minorColHeaderList.value
+})
 </script>
 
 <style lang="scss" scoped>
